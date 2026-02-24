@@ -3,38 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selbsterkenntnis | Bullenpower Uri</title>
+    <title>Das Verhör | Bullenpower Uri</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital@1&display=swap');
-        body { background-color: #050505; color: #d4af37; font-family: 'Cinzel', serif; overflow: hidden; }
-        .page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; width: 100%; transition: opacity 0.8s ease-in-out; padding: 20px; text-align: center; }
+        
+        body { 
+            background-color: #000; 
+            color: #d4af37; 
+            font-family: 'Cinzel', serif; 
+            overflow: hidden; 
+            margin: 0;
+        }
+
+        /* Vignetten-Effekt (Herzschlag) */
+        .vignette {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 40%, black 150%);
+            pointer-events: none;
+            z-index: 50;
+            animation: pulse 4s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .page { 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            position: absolute; 
+            width: 100%; 
+            transition: opacity 0.5s ease-in; 
+            z-index: 10;
+        }
+
         .hidden { opacity: 0; pointer-events: none; }
-        input { background: transparent; border-bottom: 1px solid #333; outline: none; padding: 10px; width: 100%; max-width: 450px; color: #fff; font-family: 'Lora', serif; font-style: italic; font-size: 1.3rem; text-align: center; transition: all 0.5s; }
-        input:focus { border-color: #d4af37; box-shadow: 0 10px 20px -10px rgba(212, 175, 55, 0.3); }
-        .gold-glow { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
-        .list-container { background: rgba(20, 20, 20, 0.6); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; padding: 20px; backdrop-blur: 10px; }
+
+        /* Glitch Effekt für Fragen */
+        .glitch {
+            position: relative;
+            animation: glitch-anim 0.2s 2 ease-in-out;
+        }
+
+        @keyframes glitch-anim {
+            0% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
+            20% { transform: translate(-3px, 2px); }
+            40% { transform: translate(3px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        input { 
+            background: transparent; 
+            border-bottom: 1px solid #222; 
+            outline: none; 
+            padding: 10px; 
+            width: 100%; 
+            max-width: 450px; 
+            color: #fff; 
+            font-family: 'Lora', serif; 
+            font-style: italic; 
+            font-size: 1.3rem; 
+            text-align: center; 
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            opacity: 0.3;
+        }
     </style>
 </head>
 <body>
 
+    <div class="vignette"></div>
+    <canvas id="bg-canvas"></canvas>
+
     <div id="survey-container"></div>
 
     <div id="final-page" class="page hidden">
-        <h2 class="gold-glow text-2xl mb-4">Danke für deine Zeit.</h2>
-        <p class="font-serif italic text-gray-500 mb-10 max-w-md">Ich hoffe, du hast dich jetzt auch besser kennengelernt. Ich auf jeden Fall ;)</p>
-        
-        <div class="w-full max-w-sm list-container">
-            <h3 class="text-[10px] tracking-[0.3em] uppercase mb-4 opacity-40 text-center">Letzte Teilnehmer</h3>
-            <div id="live-list" class="space-y-3 text-left">
-                <p class="text-xs italic opacity-20 text-center">Analysiere Daten...</p>
-            </div>
-        </div>
+        <h2 class="text-2xl mb-4 italic">Danke für deine Zeit.</h2>
+        <p class="font-serif text-gray-600 mb-10">Ich hoffe, du hast dich jetzt besser kennengelernt. Ich auf jeden Fall ;)</p>
+        <div id="live-list" class="w-full max-w-xs text-xs space-y-2 opacity-50"></div>
     </div>
 
     <script>
-        // DEINE DATEN
         const FORMSPREE_URL = "https://formspree.io/f/mzdayryq"; 
         const SUPABASE_URL = 'https://xqlxartkonbvzlkvewfq.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_2ntA31uO8udqoaeFbncT8Q_R1rvhyt_';
@@ -62,26 +122,29 @@
                 div.id = `s-${i}`;
                 div.className = `page ${i === 0 ? '' : 'hidden'}`;
                 div.innerHTML = `
-                    <p class="text-[9px] tracking-widest opacity-30 mb-6 uppercase">Fragment ${i + 1} / ${fragen.length}</p>
-                    <h2 class="gold-glow text-2xl md:text-4xl mb-12 max-w-2xl px-4">${q}</h2>
-                    <input type="text" id="i-${i}" onkeypress="checkEnter(event, ${i})" autocomplete="off" placeholder="...">
-                    <p class="mt-8 text-[10px] opacity-20 italic">Enter zum Bestätigen</p>
+                    <h2 id="q-${i}" class="text-2xl md:text-4xl mb-12 px-6 tracking-widest">${q}</h2>
+                    <input type="text" id="i-${i}" onkeypress="checkEnter(event, ${i})" autocomplete="off">
                 `;
                 container.appendChild(div);
             });
         }
 
-        function checkEnter(e, i) { if(e.key === "Enter") next(i); }
+        function checkEnter(e, i) { 
+            if(e.key === "Enter") {
+                const qText = document.getElementById(`q-${i}`);
+                qText.classList.add('glitch'); // Glitch beim Absenden
+                setTimeout(() => next(i), 300);
+            }
+        }
 
         async function next(i) {
             const val = document.getElementById(`i-${i}`).value;
-            if(!val) return; 
-
-            answers[`Frage_${i+1}`] = val;
+            answers[`F${i+1}`] = val;
             document.getElementById(`s-${i}`).classList.add('hidden');
             
             if(i + 1 < fragen.length) {
-                document.getElementById(`s-${i+1}`).classList.remove('hidden');
+                const nextStep = document.getElementById(`s-${i+1}`);
+                nextStep.classList.remove('hidden');
                 document.getElementById(`i-${i+1}`).focus();
             } else {
                 finish();
@@ -90,40 +153,46 @@
 
         async function finish() {
             const duration = Math.floor((Date.now() - startTime) / 1000);
-            const name = answers["Frage_1"] || "Unbekannt";
+            const name = answers["F1"] || "Anonym";
 
-            // Unbemerkt senden
             fetch(FORMSPREE_URL, {
                 method: 'POST',
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...answers, Gesamtzeit_Sekunden: duration })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...answers, Zeit: duration })
             });
 
-            // Live-Liste Eintrag
-            try {
-                await supabaseClient.from('survey_results').insert([{ name: name, duration: duration }]);
-            } catch (e) { console.error("DB Error"); }
+            await supabaseClient.from('survey_results').insert([{ name: name, duration: duration }]);
 
             document.getElementById('final-page').classList.remove('hidden');
             renderList();
-
-            setTimeout(() => {
-                window.location.href = "https://www.bullenpower-uri.ch";
-            }, 8000);
+            setTimeout(() => window.location.href = "https://www.bullenpower-uri.ch", 8000);
         }
 
         async function renderList() {
             const { data } = await supabaseClient.from('survey_results').select('*').order('created_at', { ascending: false }).limit(5);
-            if(data) {
-                document.getElementById('live-list').innerHTML = data.map(d => `
-                    <div class="flex justify-between text-xs border-b border-gold/5 pb-2">
-                        <span class="gold-text">${d.name}</span>
-                        <span class="opacity-40 italic">${d.duration} Sek.</span>
-                    </div>
-                `).join('');
-            }
+            if(data) document.getElementById('live-list').innerHTML = data.map(d => `<div>${d.name} — ${d.duration}s</div>`).join('');
         }
 
+        // Hintergrund Nebel-Effekt
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+
+        for(let i=0; i<50; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2});
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(212, 175, 55, 0.05)";
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.s * 50, 0, Math.PI*2);
+                ctx.fill();
+                p.y -= 0.2; if(p.y < -100) p.y = canvas.height + 100;
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
         build();
     </script>
 </body>
