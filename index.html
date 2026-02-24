@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selbsterkenntnis | Bullenpower</title>
+    <title>Selbsterkenntnis | Bullenpower Uri</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -11,35 +11,34 @@
         body { background-color: #050505; color: #d4af37; font-family: 'Cinzel', serif; overflow: hidden; }
         .page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; width: 100%; transition: opacity 0.8s ease-in-out; padding: 20px; text-align: center; }
         .hidden { opacity: 0; pointer-events: none; }
-        input { background: transparent; border-bottom: 1px solid #333; outline: none; padding: 10px; width: 100%; max-width: 400px; color: #fff; font-family: 'Lora', serif; font-style: italic; font-size: 1.5rem; text-align: center; transition: border-color 0.5s; }
-        input:focus { border-color: #d4af37; }
+        input { background: transparent; border-bottom: 1px solid #333; outline: none; padding: 10px; width: 100%; max-width: 450px; color: #fff; font-family: 'Lora', serif; font-style: italic; font-size: 1.3rem; text-align: center; transition: all 0.5s; }
+        input:focus { border-color: #d4af37; box-shadow: 0 10px 20px -10px rgba(212, 175, 55, 0.3); }
         .gold-glow { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
-        .list-item { border-bottom: 1px solid rgba(212, 175, 55, 0.1); padding: 10px; font-family: 'Lora', serif; font-size: 0.9rem; }
+        .list-container { background: rgba(20, 20, 20, 0.6); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; padding: 20px; backdrop-blur: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="survey-container">
-        </div>
+    <div id="survey-container"></div>
 
     <div id="final-page" class="page hidden">
         <h2 class="gold-glow text-2xl mb-4">Danke für deine Zeit.</h2>
-        <p class="font-serif italic text-gray-500 mb-10">Ich hoffe, du hast dich jetzt besser kennengelernt. Ich auf jeden Fall ;)</p>
+        <p class="font-serif italic text-gray-500 mb-10 max-w-md">Ich hoffe, du hast dich jetzt auch besser kennengelernt. Ich auf jeden Fall ;)</p>
         
-        <div class="w-full max-w-md bg-stone-900/30 border border-gold/10 rounded-lg p-6">
-            <h3 class="text-xs tracking-widest uppercase mb-4 opacity-50">Letzte Seelenforscher:</h3>
-            <div id="live-list" class="max-h-60 overflow-y-auto">
-                <p class="text-xs italic opacity-30">Lade Liste...</p>
+        <div class="w-full max-w-sm list-container">
+            <h3 class="text-[10px] tracking-[0.3em] uppercase mb-4 opacity-40 text-center">Letzte Teilnehmer</h3>
+            <div id="live-list" class="space-y-3 text-left">
+                <p class="text-xs italic opacity-20 text-center">Analysiere Daten...</p>
             </div>
         </div>
     </div>
 
     <script>
-        // KONFIGURATION
-        const FORMSPREE_URL = "https://formspree.io/f/DEINE_ID"; // Dein Webhook für die Antworten
-        const SUPABASE_URL = 'https://sscbgmurgndibyewluox.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_JxrdID7HqDC6lZ1Ze44V4Q_t9jweUAY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // DEINE DATEN
+        const FORMSPREE_URL = "https://formspree.io/f/mzdayryq"; 
+        const SUPABASE_URL = 'https://xqlxartkonbvzlkvewfq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_2ntA31uO8udqoaeFbncT8Q_R1rvhyt_';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const fragen = [
             "Wer bist du?", "Wer bist du wirklich?", "Wer willst du sein?", "Wer willst du einmal werden?",
@@ -53,80 +52,79 @@
             "Warum?", "Welches ist dein Lieblingsessen?", "Warum?"
         ];
 
-        let currentStep = 0;
         let answers = {};
         let startTime = Date.now();
 
-        function initSurvey() {
+        function build() {
             const container = document.getElementById('survey-container');
             fragen.forEach((q, i) => {
                 const div = document.createElement('div');
-                div.id = `step-${i}`;
+                div.id = `s-${i}`;
                 div.className = `page ${i === 0 ? '' : 'hidden'}`;
                 div.innerHTML = `
-                    <p class="text-gray-600 text-xs mb-4 uppercase tracking-[0.3em]">Frage ${i + 1} von ${fragen.length}</p>
-                    <h2 class="gold-glow text-3xl md:text-4xl mb-12">${q}</h2>
-                    <input type="text" id="ans-${i}" onkeypress="handleKey(event, ${i})" autocomplete="off">
-                    <button onclick="nextStep(${i})" class="mt-12 text-[10px] tracking-widest opacity-30 hover:opacity-100 transition">DRÜCKE ENTER</button>
+                    <p class="text-[9px] tracking-widest opacity-30 mb-6 uppercase">Fragment ${i + 1} / ${fragen.length}</p>
+                    <h2 class="gold-glow text-2xl md:text-4xl mb-12 max-w-2xl px-4">${q}</h2>
+                    <input type="text" id="i-${i}" onkeypress="checkEnter(event, ${i})" autocomplete="off" placeholder="...">
+                    <p class="mt-8 text-[10px] opacity-20 italic">Enter zum Bestätigen</p>
                 `;
                 container.appendChild(div);
             });
         }
 
-        function handleKey(e, i) { if(e.key === "Enter") nextStep(i); }
+        function checkEnter(e, i) { if(e.key === "Enter") next(i); }
 
-        async function nextStep(i) {
-            const val = document.getElementById(`ans-${i}`).value;
-            answers[`q${i+1}_${fragen[i].substring(0,20)}`] = val;
+        async function next(i) {
+            const val = document.getElementById(`i-${i}`).value;
+            if(!val) return; 
 
-            document.getElementById(`step-${i}`).classList.add('hidden');
+            answers[`Frage_${i+1}`] = val;
+            document.getElementById(`s-${i}`).classList.add('hidden');
             
             if(i + 1 < fragen.length) {
-                document.getElementById(`step-${i+1}`).classList.remove('hidden');
+                document.getElementById(`s-${i+1}`).classList.remove('hidden');
+                document.getElementById(`i-${i+1}`).focus();
             } else {
-                finishSurvey();
+                finish();
             }
         }
 
-        async function finishSurvey() {
-            const endTime = Date.now();
-            const durationSeconds = Math.floor((endTime - startTime) / 1000);
-            const userName = answers["q1_Wer bist du?"] || "Anonym";
+        async function finish() {
+            const duration = Math.floor((Date.now() - startTime) / 1000);
+            const name = answers["Frage_1"] || "Unbekannt";
 
-            // 1. Unbemerkt an Formspree senden
+            // Unbemerkt senden
             fetch(FORMSPREE_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...answers, dauer_sekunden: durationSeconds })
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...answers, Gesamtzeit_Sekunden: duration })
             });
 
-            // 2. In Live-Liste (Supabase) speichern
-            await supabase.from('survey_results').insert([
-                { name: userName, duration: durationSeconds }
-            ]);
+            // Live-Liste Eintrag
+            try {
+                await supabaseClient.from('survey_results').insert([{ name: name, duration: duration }]);
+            } catch (e) { console.error("DB Error"); }
 
-            // 3. Finale Seite anzeigen & Liste laden
             document.getElementById('final-page').classList.remove('hidden');
-            loadLiveList();
+            renderList();
 
-            // 4. Redirect nach 8 Sekunden (damit man die Liste kurz sieht)
             setTimeout(() => {
                 window.location.href = "https://www.bullenpower-uri.ch";
             }, 8000);
         }
 
-        async function loadLiveList() {
-            const { data } = await supabase.from('survey_results').select('*').order('created_at', { ascending: false }).limit(5);
-            const listDiv = document.getElementById('live-list');
-            listDiv.innerHTML = data.map(entry => `
-                <div class="list-item flex justify-between">
-                    <span>${entry.name}</span>
-                    <span class="opacity-40">${entry.duration} Sek.</span>
-                </div>
-            `).join('');
+        async function renderList() {
+            const { data } = await supabaseClient.from('survey_results').select('*').order('created_at', { ascending: false }).limit(5);
+            if(data) {
+                document.getElementById('live-list').innerHTML = data.map(d => `
+                    <div class="flex justify-between text-xs border-b border-gold/5 pb-2">
+                        <span class="gold-text">${d.name}</span>
+                        <span class="opacity-40 italic">${d.duration} Sek.</span>
+                    </div>
+                `).join('');
+            }
         }
 
-        initSurvey();
+        build();
     </script>
 </body>
 </html>
