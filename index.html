@@ -3,33 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Das Verhör | Bullenpower Uri</title>
+    <title>Das Verhör | Magische Selbsterkenntnis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital@1&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Orbitron:wght@400;700&display=swap');
         
+        :root {
+            --neon-gold: #d4af37;
+            --neon-glow: rgba(212, 175, 55, 0.6);
+            --magic-purple: #2d004d;
+        }
+
         body { 
-            background-color: #000; 
-            color: #d4af37; 
-            font-family: 'Cinzel', serif; 
+            background-color: #020202; 
+            color: var(--neon-gold); 
+            font-family: 'Orbitron', sans-serif; 
             overflow: hidden; 
             margin: 0;
         }
 
-        /* Vignetten-Effekt (Herzschlag) */
+        /* Magischer Hintergrund */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            background: radial-gradient(circle at center, #0a001a 0%, #000 100%);
+        }
+
+        /* Neon-Vignette */
         .vignette {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 40%, black 150%);
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.9) 100%);
+            box-shadow: inset 0 0 150px #000;
             pointer-events: none;
             z-index: 50;
-            animation: pulse 4s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
         }
 
         .page { 
@@ -40,44 +49,77 @@
             justify-content: center; 
             position: absolute; 
             width: 100%; 
-            transition: opacity 0.5s ease-in; 
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
             z-index: 10;
+            text-align: center;
         }
 
-        .hidden { opacity: 0; pointer-events: none; }
+        .hidden { opacity: 0; transform: scale(0.8) translateY(50px); pointer-events: none; }
 
-        /* Glitch Effekt für Fragen */
-        .glitch {
-            position: relative;
-            animation: glitch-anim 0.2s 2 ease-in-out;
+        /* Neon Text Effekt */
+        .neon-text {
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px var(--neon-glow), 0 0 20px var(--neon-glow), 0 0 40px var(--magic-purple);
+            animation: flicker 3s infinite alternate;
         }
 
-        @keyframes glitch-anim {
-            0% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
-            20% { transform: translate(-3px, 2px); }
-            40% { transform: translate(3px, -2px); }
-            100% { transform: translate(0); }
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            95% { opacity: 0.8; }
+            97% { opacity: 1; }
+            99% { opacity: 0.9; }
         }
 
+        /* Magischer Input */
         input { 
-            background: transparent; 
-            border-bottom: 1px solid #222; 
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid var(--neon-gold); 
+            box-shadow: 0 0 15px var(--neon-glow);
             outline: none; 
-            padding: 10px; 
+            padding: 15px; 
             width: 100%; 
-            max-width: 450px; 
+            max-width: 500px; 
             color: #fff; 
-            font-family: 'Lora', serif; 
-            font-style: italic; 
-            font-size: 1.3rem; 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 1.1rem; 
             text-align: center; 
+            border-radius: 5px;
+            transition: all 0.3s;
         }
 
-        #bg-canvas {
+        input:focus {
+            box-shadow: 0 0 30px var(--neon-glow), inset 0 0 10px var(--neon-glow);
+            transform: scale(1.02);
+        }
+
+        /* Jumpscare */
+        #jumpscare {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
-            opacity: 0.3;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000;
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #jumpscare img { width: 100%; height: 100%; object-fit: cover; filter: contrast(150%) brightness(80%); }
+
+        .shake { animation: shake-anim 0.05s infinite; }
+        @keyframes shake-anim {
+            0% { transform: translate(2px, 2px); }
+            50% { transform: translate(-2px, -2px); }
+            100% { transform: translate(2px, -2px); }
+        }
+
+        .final-list {
+            background: rgba(10, 0, 20, 0.8);
+            border: 1px solid var(--neon-gold);
+            box-shadow: 0 0 20px var(--magic-purple);
+            padding: 2rem;
+            border-radius: 1rem;
         }
     </style>
 </head>
@@ -86,12 +128,18 @@
     <div class="vignette"></div>
     <canvas id="bg-canvas"></canvas>
 
+    <div id="jumpscare">
+        <img src="death.JPG" alt="!!!">
+    </div>
+
     <div id="survey-container"></div>
 
     <div id="final-page" class="page hidden">
-        <h2 class="text-2xl mb-4 italic">Danke für deine Zeit.</h2>
-        <p class="font-serif text-gray-600 mb-10">Ich hoffe, du hast dich jetzt besser kennengelernt. Ich auf jeden Fall ;)</p>
-        <div id="live-list" class="w-full max-w-xs text-xs space-y-2 opacity-50"></div>
+        <div class="final-list">
+            <h2 class="neon-text text-2xl mb-4">Erkenntnis erlangt</h2>
+            <p class="text-sm italic text-gray-400 mb-8">Deine Seele wurde digitalisiert.</p>
+            <div id="live-list" class="space-y-3 text-xs"></div>
+        </div>
     </div>
 
     <script>
@@ -122,30 +170,40 @@
                 div.id = `s-${i}`;
                 div.className = `page ${i === 0 ? '' : 'hidden'}`;
                 div.innerHTML = `
-                    <h2 id="q-${i}" class="text-2xl md:text-4xl mb-12 px-6 tracking-widest">${q}</h2>
-                    <input type="text" id="i-${i}" onkeypress="checkEnter(event, ${i})" autocomplete="off">
+                    <p class="text-[10px] tracking-[0.5em] mb-4 opacity-50">SYNCING REALITY...</p>
+                    <h2 class="neon-text text-xl md:text-3xl mb-12 px-6">${q}</h2>
+                    <input type="text" id="i-${i}" onkeypress="checkEnter(event, ${i})" autocomplete="off" placeholder="Antworte...">
                 `;
                 container.appendChild(div);
             });
         }
 
-        function checkEnter(e, i) { 
-            if(e.key === "Enter") {
-                const qText = document.getElementById(`q-${i}`);
-                qText.classList.add('glitch'); // Glitch beim Absenden
-                setTimeout(() => next(i), 300);
-            }
-        }
+        function checkEnter(e, i) { if(e.key === "Enter") next(i); }
 
         async function next(i) {
             const val = document.getElementById(`i-${i}`).value;
-            answers[`F${i+1}`] = val;
+            if(!val) return;
+            answers[`Frage_${i+1}`] = val;
+
+            // JUMPSCARE BEI FRAGE 13 (Index 12)
+            if (i === 12) {
+                const jump = document.getElementById('jumpscare');
+                jump.style.display = 'flex';
+                document.body.classList.add('shake');
+                setTimeout(() => {
+                    jump.style.display = 'none';
+                    document.body.classList.remove('shake');
+                }, 700);
+            }
+
             document.getElementById(`s-${i}`).classList.add('hidden');
             
             if(i + 1 < fragen.length) {
                 const nextStep = document.getElementById(`s-${i+1}`);
-                nextStep.classList.remove('hidden');
-                document.getElementById(`i-${i+1}`).focus();
+                setTimeout(() => {
+                    nextStep.classList.remove('hidden');
+                    document.getElementById(`i-${i+1}`).focus();
+                }, 300);
             } else {
                 finish();
             }
@@ -153,42 +211,41 @@
 
         async function finish() {
             const duration = Math.floor((Date.now() - startTime) / 1000);
-            const name = answers["F1"] || "Anonym";
+            const name = answers["Frage_1"] || "Unbekannt";
 
             fetch(FORMSPREE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...answers, Zeit: duration })
+                body: JSON.stringify({ ...answers, Dauer: duration })
             });
 
             await supabaseClient.from('survey_results').insert([{ name: name, duration: duration }]);
 
             document.getElementById('final-page').classList.remove('hidden');
-            renderList();
+            const { data } = await supabaseClient.from('survey_results').select('*').order('created_at', { ascending: false }).limit(5);
+            if(data) {
+                document.getElementById('live-list').innerHTML = data.map(d => 
+                    `<div class="flex justify-between border-b border-white/5 pb-1">
+                        <span>${d.name}</span> <span class="opacity-50">${d.duration}s</span>
+                    </div>`).join('');
+            }
+
             setTimeout(() => window.location.href = "https://www.bullenpower-uri.ch", 8000);
         }
 
-        async function renderList() {
-            const { data } = await supabaseClient.from('survey_results').select('*').order('created_at', { ascending: false }).limit(5);
-            if(data) document.getElementById('live-list').innerHTML = data.map(d => `<div>${d.name} — ${d.duration}s</div>`).join('');
-        }
-
-        // Hintergrund Nebel-Effekt
+        // Magischer Hintergrund-Effekt
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        let particles = [];
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.onresize = resize; resize();
-
-        for(let i=0; i<50; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2});
+        let pts = [];
+        function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = res; res();
+        for(let i=0; i<60; i++) pts.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*2, v: Math.random()*0.5});
         function draw() {
             ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.fillStyle = "rgba(212, 175, 55, 0.05)";
-            particles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.s * 50, 0, Math.PI*2);
-                ctx.fill();
-                p.y -= 0.2; if(p.y < -100) p.y = canvas.height + 100;
+            pts.forEach(p => {
+                ctx.fillStyle = `rgba(212, 175, 55, ${Math.random()*0.5})`;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+                p.y -= p.v; if(p.y < 0) p.y = canvas.height;
             });
             requestAnimationFrame(draw);
         }
